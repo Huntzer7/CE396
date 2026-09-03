@@ -1,1 +1,1 @@
-# CE396
+#   Workshop 2
