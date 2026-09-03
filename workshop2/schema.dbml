@@ -1,0 +1,107 @@
+enum display_status {
+	"	'active'"
+	"'deceased'"
+}
+
+Table Owner [headercolor: #175e7a] {
+	owner_id integer [ pk, increment, not null ]
+	owner_name varchar(100) [ not null, note: 'ชื่อเจ้าของ' ]
+	address varchar(255) [ not null ]
+}
+
+Table owner_phone [headercolor: #2c9dc9] {
+	owner_id integer [ pk, increment, not null ]
+	phone varchar(20)
+
+	indexes {
+		(owner_id, phone) [ name: 'owner_phone_index_0' ]
+	}
+}
+
+Table pet [headercolor: #2cdb4c] {
+	pet_id integer [ pk, increment, not null ]
+	owner_id integer [ not null ]
+	pet_name varchar(20) [ not null ]
+	species varchar(20) [ note: 'หมา แมว อื่นๆ' ]
+	breed varchar(20) [ note: 'พันธุ์' ]
+	dob date [ note: 'date of birth' ]
+	display_status display_status
+}
+
+Table vet [headercolor: #3d2abd] {
+	vet_id integer [ pk, increment, not null ]
+	vet_name varchar(200) [ not null ]
+}
+
+Table vet_specialization [headercolor: #4430c2] {
+	vet_id integer [ pk, increment, not null ]
+	specailization varchar(255) [ not null, note: 'ความเชี่ยวชาญ มีได้หลายด้าน' ]
+
+	indexes {
+		(vet_id, specailization) [ name: 'vet_specialization_index_0' ]
+	}
+}
+
+Table visit [headercolor: #d42f5d] {
+	pet_id integer [ increment, not null ]
+	visit_no integer
+	vet_id integer [ not null ]
+	visit_date timestamp [ not null ]
+	diagnosis text [ note: 'ตรวจระบุโรค' ]
+	total_amount decimal
+	receipt_print boolean
+
+	indexes {
+		(pet_id, visit_no) [ name: 'visit_index_0' ]
+	}
+
+	Note: 'weak_entity'
+}
+
+Table medicine [headercolor: #d67d0f] {
+	med_id integer [ pk, increment, not null ]
+	med_name varchar(255)
+	unit_price decimal [ note: 'ราคายา อาจเปลี่ยนได้' ]
+	unit varchar(255) [ note: 'หน่วยนับ เม็ด, ml อื่นๆ' ]
+}
+
+Table visit_medicine [headercolor: #d67d0f] {
+	pet_id integer [ pk, increment, not null ]
+	visit_no integer
+	med_id integer
+	quantity integer [ note: 'จำนวนที่สั่ง' ]
+	days integer [ note: 'จำนวนวันไม่ใช่วันที่' ]
+	price_at_visit decimal [ note: 'ราคา ณ วันตรวจ ห้ามเปลี่ยน' ]
+
+	indexes {
+		(pet_id, visit_no, med_id) [ name: 'visit_medicine_index_0' ]
+	}
+}
+
+Ref has_phone {
+	owner_phone.owner_id > Owner.owner_id [ delete: no action, update: no action ]
+}
+
+Ref Owns {
+	pet.owner_id > Owner.owner_id [ delete: no action, update: no action ]
+}
+
+Ref Has {
+	pet.pet_id < visit.pet_id [ delete: no action, update: no action ]
+}
+
+Ref has_specialization {
+	vet.vet_id < vet_specialization.vet_id [ delete: no action, update: no action ]
+}
+
+Ref examines {
+	visit.vet_id > vet.vet_id [ delete: no action, update: no action ]
+}
+
+Ref dispense {
+	visit_medicine.med_id > medicine.med_id [ delete: no action, update: no action ]
+}
+
+Ref prescribe {
+	visit_medicine.(pet_id, visit_no) < visit.(pet_id, visit_no) [ delete: no action, update: no action ]
+}
